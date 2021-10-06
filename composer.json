@@ -1,0 +1,22 @@
+{
+    "name": "jisungyoo/naver-search-ad-api",
+    "description": "naver search ad api",
+    "authors": [
+        {
+            "name": "jiseong",
+            "email": "jisung87kr@nate.com"
+        }
+    ],
+    "require": {
+        "illuminate/container": "^8.62",
+        "guzzlehttp/guzzle": "^7.0",
+        "symfony/dom-crawler": "^5.3",
+        "symfony/css-selector": "^5.3",
+        "monolog/monolog": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ujsstudio\\App\\": "src"
+        }
+    }
+}
