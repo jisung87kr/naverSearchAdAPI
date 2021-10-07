@@ -12,18 +12,22 @@ $myCrawler = $app->make(SearchAD::class);
 $DEBUG = false;
 $myCrawler->init($config['BASE_URL'], $config['API_KEY'], $config['SECRET_KEY'], $config['CUSTOMER_ID']);
 
-$params = [
-    'siteId' => 'bsn-a001-00-000000004370037',
-    'biztpId' => 1,
-    'hintKeywords' => $_GET['keyword'],
-    'event' => 1,
-    'month' => date('n'),
-    'showDetail' => 1
-];
-$result = $myCrawler->GET('/keywordstool', $params);
+if(isset($_GET['keyword'])){
+    $keyword = $_GET['keyword'];
+    $params = [
+        'siteId' => 'bsn-a001-00-000000004370037',
+        'biztpId' => 1,
+        'hintKeywords' => $keyword,
+        'event' => 1,
+        'month' => date('n'),
+        'showDetail' => 1
+    ];
+    $result = $myCrawler->GET('/keywordstool', $params);
+}
 
 if(isset($_REQUEST['act']) && $_REQUEST['act'] == 'crawlNaverShopping'){
-    $crawlData = $myCrawler->crawlNaverShopping($_GET['keyword']);
+    $keyword = $_GET['keyword'];
+    $crawlData = $myCrawler->crawlNaverShopping($keyword);
     echo html_entity_decode($crawlData[0]);
     exit;
 }
@@ -43,6 +47,9 @@ if(isset($_REQUEST['act']) && $_REQUEST['act'] == 'crawlNaverShopping'){
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <!-- datatables-->
+    <link rel="stylesheet" href="./lib/DataTables/datatables.min.css">
+    <script src="./lib/DataTables/datatables.min.js"></script>
 </head>
 <style>
     .table td,
@@ -52,9 +59,22 @@ if(isset($_REQUEST['act']) && $_REQUEST['act'] == 'crawlNaverShopping'){
 </style>
 <body>
 <div class="container-fluid">
+    <div class="border my-5">
+        <form action="" method="GET" class="my-3">
+            <div class="row g-3 justify-content-center">
+                <div class="col-auto">
+                    <input type="text" name="keyword" value="<?= $keyword ?>" placeholder="키워드 검색" class="form-control">
+                </div>
+                <div class="col-auto">
+                    <input type="submit" value="검색" class="btn btn-primary">
+                </div>
+            </div>
+        </form>
+    </div>
     <div class="table-responsive">
-        <h1>'<?= $_GET['keyword'] ?>' 키워드 검색 결과 (<?= count($result['keywordList']); ?>건)</h1>
-        <table class="table table-bordered table-striped table-hover" style="font-size: 12px;">
+        <?php if(isset($keyword)): ?>
+        <h1>'<?= $keyword ?>' 키워드 검색 결과 (<?= count($result['keywordList']); ?>건)</h1>
+        <table class="table table-bordered table-striped table-hover" style="font-size: 12px;" id="table">
             <thead>
             <tr>
                 <td>#</td>
@@ -90,6 +110,11 @@ if(isset($_REQUEST['act']) && $_REQUEST['act'] == 'crawlNaverShopping'){
             <?php endforeach; ?>
             </tbody>
         </table>
+        <?php else: ?>
+        <div class="text-center my-3">
+            <h3>검색어를 입력하세요.</h3>
+        </div>
+        <?php endif;?>
     </div>
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -142,8 +167,56 @@ if(isset($_REQUEST['act']) && $_REQUEST['act'] == 'crawlNaverShopping'){
                 $('html').css('cursor', 'default');
             }
         }
+
+        function format () {
+            // `d` is the original data object for the row
+            return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'+
+                '<tr>'+
+                '<td>Full name:</td>'+
+                '<td>'+1+'</td>'+
+                '</tr>'+
+                '<tr>'+
+                '<td>Extension number:</td>'+
+                '<td>'+2+'</td>'+
+                '</tr>'+
+                '<tr>'+
+                '<td>Extra info:</td>'+
+                '<td>And any further details here (images etc)...</td>'+
+                '</tr>'+
+                '</table>';
+        }
+
+        var opt = {
+            paging: false,
+            fixedHeader: {
+                header: true,
+            },
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ]
+        };
+
+        var table = $('#table').dataTable(opt);
+        console.log(table.row());
         $(".btn-more").click(function(){
             moreData($(this));
+
+            var tr = $(this).closest('tr');
+            var row = table.row( tr );
+
+            if ( row.child.isShown() ) {
+                // This row is already open - close it
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                // Open this row
+                row.child( format(row.data()) ).show();
+                tr.addClass('shown');
+            }
+
+
         });
 
         $("#exampleModal").on("show.bs.modal", function(event){
@@ -153,6 +226,8 @@ if(isset($_REQUEST['act']) && $_REQUEST['act'] == 'crawlNaverShopping'){
         $("#exampleModal").on("hidden.bs.modal", function(event){
             console.log(event);
         });
+
+
     });
 </script>
 </body>
