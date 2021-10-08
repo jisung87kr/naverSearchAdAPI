@@ -117,7 +117,6 @@ if(isset($_REQUEST['act'])){
         function initDataTable(el, data){
             var dtOpt = {
                 paging: false,
-                stateSave: true,
                 fixedHeader: {
                     header: true,
                 },
@@ -141,7 +140,9 @@ if(isset($_REQUEST['act'])){
                     {defaultContent: '<input type="button" value="추가정보" class="btn btn-secondary btn-sm btn-more" />'},
                 ]
             };
-
+            if(tb){
+                tb.destroy();
+            }
             return el.DataTable(dtOpt);
         }
 
