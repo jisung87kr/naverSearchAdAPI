@@ -26,10 +26,7 @@ if(isset($_REQUEST['act'])){
                 'showDetail' => 1
             ];
             $result = $myCrawler->GET('/keywordstool', $params);
-            $json = json_encode($result, JSON_UNESCAPED_UNICODE);
-            $json = str_replace('< ', '', $json);
-//            $myCrawler->dd($result);
-//            $myCrawler->dd($json);
+            $json = $myCrawler->makeKeywordList($result);
             break;
         case 'crawlNaverShopping':
             $crawlData = $myCrawler->crawlNaverShopping($keyword);
@@ -67,11 +64,12 @@ if(isset($_REQUEST['act'])){
 </style>
 <body>
 <div class="container-fluid">
-    <div class="border my-5">
+    <div class="border my-1 py-5">
+        <h1 class="text-center">네이버 검색광고 키워드 검색</h1>
         <form action="" class="my-3" id="search-form">
             <div class="row g-3 justify-content-center">
                 <div class="col-auto">
-                    <input type="text" name="keyword" value="감자" placeholder="키워드 검색" class="form-control">
+                    <input type="text" name="keyword" value="" placeholder="키워드 검색" class="form-control">
                 </div>
                 <div class="col-auto">
                     <input type="submit" value="검색" class="btn btn-primary btn-search">
@@ -80,7 +78,6 @@ if(isset($_REQUEST['act'])){
         </form>
     </div>
     <div class="table-responsive">
-        <h1>키워드 검색결과</h1>
         <table class="table table-bordered table-striped table-hover" style="font-size: 12px;" id="dataTable">
             <thead>
             <tr>
@@ -88,17 +85,22 @@ if(isset($_REQUEST['act'])){
                 <td>키워드</td>
                 <td>PC검색</td>
                 <td>MO검색</td>
+                <td>검색량</td>
                 <td>PC평균클릭수</td>
                 <td>MO평균클릭수</td>
                 <td>PC평균클릭률</td>
                 <td>MO평균클릭률</td>
                 <td>월평균노출광고</td>
                 <td>경쟁도</td>
+                <td>경쟁강도</td>
                 <td>상품수</td>
                 <td>추가정보</td>
             </tr>
             </thead>
             <tbody>
+                <tr>
+                    <td colspan="13" class="text-center">검색결과가 없습니다.</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -109,8 +111,13 @@ if(isset($_REQUEST['act'])){
         function childData(data, _this){
             var total = data.props.pageProps.initialState.products.total;
             var tr = _this.closest('tr');
-            var cell = tb.cell(tr, 10);
-            cell.data(total);
+            var totalCell = tb.cell(tr, 12);
+            var ratioCell = tb.cell(tr, 11);
+            var searchTotalCell = tb.cell(tr, 4);
+            var searchTotal = Number($(searchTotalCell.node()).text());
+            searchTotal = total/searchTotal;
+            totalCell.data(total);
+            ratioCell.data(searchTotal.toFixed(2));
             return '<div>'+total+'</div>';
         }
 
@@ -130,12 +137,14 @@ if(isset($_REQUEST['act'])){
                     {data: 'relKeyword'},
                     {data: 'monthlyPcQcCnt'},
                     {data: 'monthlyMobileQcCnt'},
+                    {data: 'monthlyTotalQcCnt'},
                     {data: 'monthlyAvePcClkCnt'},
                     {data: 'monthlyAveMobileClkCnt'},
                     {data: 'monthlyAvePcCtr'},
                     {data: 'monthlyAveMobileCtr'},
                     {data: 'plAvgDepth'},
                     {data: 'compIdx'},
+                    {data: 'ratio'},
                     {data: 'total'},
                     {defaultContent: '<input type="button" value="추가정보" class="btn btn-secondary btn-sm btn-more" />'},
                 ]
@@ -154,10 +163,6 @@ if(isset($_REQUEST['act'])){
                 }
             }).then(function(response){
                 var data = response.data;
-                for (var i = 0; i < data.keywordList.length; i++) {
-                    data.keywordList[i].idx = i+1;
-                    data.keywordList[i].total = '';
-                }
                 tb = initDataTable($("#dataTable"), data.keywordList);
             }).catch(function(error){
                 console.log(error);
@@ -216,6 +221,10 @@ if(isset($_REQUEST['act'])){
         $(".btn-search").click(function(event){
             event.preventDefault();
             var keyword = $(this).closest("form").find("input[name=keyword]").val();
+            if(keyword.length == 0){
+                alert('키워드를 입력하세요');
+                return false;
+            }
             getKeywordList(keyword);
         });
 
