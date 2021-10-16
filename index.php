@@ -180,7 +180,7 @@ if(isset($_REQUEST['act'])){
                 var tpl = $(".template .item-detail").clone();
                 console.log(tpl);
                 var item = products[i].item;
-                var isAd = item.adId != undefined ? true : false;
+                var isAd = item.adId == undefined ? false : true;
                 var itemImgSrc= item.imageUrl;
                 var itemTitle = item.productTitle;
                 var itemPrice = item.price;
