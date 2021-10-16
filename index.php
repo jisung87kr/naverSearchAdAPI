@@ -21,7 +21,7 @@ if(isset($_REQUEST['act'])){
                 'siteId' => 'bsn-a001-00-000000004370037',
                 'biztpId' => 1,
                 'hintKeywords' => $keyword,
-                'event' => 1,
+//                'event' => 0,
                 'month' => date('n'),
                 'showDetail' => 1
             ];
@@ -61,6 +61,29 @@ if(isset($_REQUEST['act'])){
     .table td{
         word-break: keep-all;
     }
+    .item-detail{
+        font-size: 14px;
+    }
+
+    .item-link{
+        display: block;
+        position: relative;
+        padding-top: 200px;
+        overflow: hidden;
+    }
+
+    .item-link img{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        -webkit-transform: translate(-50%, -50%);
+    }
+
+    .tpl-box{
+        height: 400px;
+        overflow: auto;
+    }
 </style>
 <body>
 <div class="container-fluid">
@@ -99,12 +122,40 @@ if(isset($_REQUEST['act'])){
             </thead>
             <tbody>
                 <tr>
-                    <td colspan="13" class="text-center">검색결과가 없습니다.</td>
+                    <td colspan="14" class="text-center">검색결과가 없습니다.</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<div class="template">
+    <div class="item-detail p-3 border d-none">
+        <div class="card">
+            <div class="row">
+                <div class="col-3">
+                    <a href="" class="item-link" target="_blank">
+                        <img src="https://via.placeholder.com/500" alt="" class="w-100 item-img">
+                    </a>
+                </div>
+                <div class="col-9">
+                    <div class="card-body placeholder-glow">
+                        <div class="badge-box mb-2">
+                            <span class="badge bg-primary item-rank"></span>
+                        </div>
+                        <h5 class="card-title item-title"></h5>
+                        <p class="card-text text-danger item-price fw-bolder"></p>
+                        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                            <ol class="breadcrumb item-category">
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="./js/common.js"></script>
 <script>
     $(document).ready(function() {
         var tb;
@@ -115,10 +166,61 @@ if(isset($_REQUEST['act'])){
             var ratioCell = tb.cell(tr, 11);
             var searchTotalCell = tb.cell(tr, 4);
             var searchTotal = Number($(searchTotalCell.node()).text());
+            var tpl = makeTpl(data);
             searchTotal = total/searchTotal;
             totalCell.data(total);
             ratioCell.data(searchTotal.toFixed(2));
-            return '<div>'+total+'</div>';
+            return tpl;
+        }
+
+        function makeTpl(data){
+            var products = data.props.pageProps.initialState.products.list;
+            var tplBox = $("<div class='tpl-box'></div>");
+            for(var i=0; i < 5; i++){
+                var tpl = $(".template .item-detail").clone();
+                console.log(tpl);
+                var item = products[i].item;
+                var isAd = item.adId != undefined ? true : false;
+                var itemImgSrc= item.imageUrl;
+                var itemTitle = item.productTitle;
+                var itemPrice = item.price;
+                var itemCategory = makeCategory(item);
+                var itemLink = isAd == true ? item.adcrUrl : item.mallProductUrl;
+                var itemRank = item.rank;
+                if(isAd){
+                    tpl.find('.badge-box').append('<span class="badge bg-secondary">AD</span>');
+                }
+                tpl.find(".item-link").attr('href', itemLink);
+                tpl.find(".item-img").attr('src', itemImgSrc);
+                tpl.find(".item-title").text(itemTitle);
+                tpl.find(".item-price").text(itemPrice+'원');
+                tpl.find(".item-rank").text(itemRank+'위');
+                for(var j=0; j < itemCategory.length; j++){
+                    tpl.find(".item-category").append(itemCategory[j]);
+                }
+                tpl.removeClass("d-none");
+                tplBox.append(tpl);
+            }
+            return tplBox;
+        }
+
+        function makeCategory(item){
+            var arr = [
+                item.category1Name,
+                item.category2Name,
+                item.category3Name,
+                item.category4Name
+            ];
+            var list = [];
+            for(var i=0; i < arr.length; i++){
+                if(arr[i] == undefined || arr[i] == ''){
+                    continue;
+                }
+                var tpl = $('<li class="breadcrumb-item category-item"></li>');
+                list.push(tpl.text(arr[i]));
+            }
+
+            return list;
         }
 
         function initDataTable(el, data){
@@ -134,7 +236,12 @@ if(isset($_REQUEST['act'])){
                 data: data,
                 columns: [
                     {data: 'idx'},
-                    {data: 'relKeyword'},
+                    {
+                        data: 'relKeyword',
+                        render: function(data, type, row, meta){
+                            return '<a href="https://search.shopping.naver.com/search/all?query='+data+'" target="_blank">'+data+'</a>';
+                        }
+                    },
                     {data: 'monthlyPcQcCnt'},
                     {data: 'monthlyMobileQcCnt'},
                     {data: 'monthlyTotalQcCnt'},
@@ -189,14 +296,6 @@ if(isset($_REQUEST['act'])){
             .catch(function(error) {
                 console.log(error);
             });
-        }
-
-        function startLoading(start){
-            if(start){
-                $('html').css('cursor', 'progress');
-            } else {
-                $('html').css('cursor', 'default');
-            }
         }
 
         function drawChild(_this, data)
