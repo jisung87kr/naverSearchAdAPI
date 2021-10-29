@@ -81,7 +81,7 @@ if(isset($_REQUEST['act'])){
     }
 
     .tpl-box{
-        height: 400px;
+        height: 800px;
         overflow: auto;
     }
 </style>
@@ -117,6 +117,7 @@ if(isset($_REQUEST['act'])){
                 <td>경쟁도</td>
                 <td>경쟁강도</td>
                 <td>상품수</td>
+                <td>카테고리</td>
                 <td>추가정보</td>
             </tr>
             </thead>
@@ -164,19 +165,31 @@ if(isset($_REQUEST['act'])){
             var tr = _this.closest('tr');
             var totalCell = tb.cell(tr, 12);
             var ratioCell = tb.cell(tr, 11);
+            var categoryCell = tb.cell(tr, 13);
             var searchTotalCell = tb.cell(tr, 4);
             var searchTotal = Number($(searchTotalCell.node()).text());
             var tpl = makeTpl(data);
             searchTotal = total/searchTotal;
             totalCell.data(total);
             ratioCell.data(searchTotal.toFixed(2));
+
+            var firstCategory = tpl.find(".item-detail").not(".ad").eq(0).find(".item-category .category-item");
+            var categoryText = '';
+            for (var i=0; i < firstCategory.length; i++){
+                if(i == firstCategory.length-1){
+                    categoryText += $(firstCategory[i]).text();
+                } else {
+                    categoryText += $(firstCategory[i]).text()+' > ';
+                }
+            }
+            categoryCell.data(categoryText);
             return tpl;
         }
 
         function makeTpl(data){
             var products = data.props.pageProps.initialState.products.list;
             var tplBox = $("<div class='tpl-box'></div>");
-            for(var i=0; i < 5; i++){
+            for(var i=0; i < 10; i++){
                 var tpl = $(".template .item-detail").clone();
                 console.log(tpl);
                 var item = products[i].item;
@@ -188,6 +201,7 @@ if(isset($_REQUEST['act'])){
                 var itemLink = isAd == true ? item.adcrUrl : item.mallProductUrl;
                 var itemRank = item.rank;
                 if(isAd){
+                    tpl.addClass('ad');
                     tpl.find('.badge-box').append('<span class="badge bg-secondary">AD</span>');
                 }
                 tpl.find(".item-link").attr('href', itemLink);
@@ -253,6 +267,7 @@ if(isset($_REQUEST['act'])){
                     {data: 'compIdx'},
                     {data: 'ratio'},
                     {data: 'total'},
+                    {defaultContent: ''},
                     {defaultContent: '<input type="button" value="추가정보" class="btn btn-secondary btn-sm btn-more" />'},
                 ]
             };
