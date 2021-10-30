@@ -19,6 +19,15 @@ class SearchAD extends RestApi
         $this->apiKey = $apiKey;
         $this->secretKey = $secretKey;
         $this->customerId = $customerId;
+        $this->setting = [
+            'keywordtool' => [
+                'siteId' => 'bsn-a001-00-000000004370037',
+                'biztpId' => 1,
+                'hintKeywords' => null,
+                'month' => date('n'),
+                'showDetail' => 1
+            ]
+        ];
     }
 
     public function crawlNaverShopping($keyword, $returnType=true)
@@ -71,6 +80,7 @@ class SearchAD extends RestApi
             $compIdx                = $item['compIdx'];
             $relKeyword             = $item['relKeyword'];
 
+
             $list[$index]['monthlyPcQcCnt']         = $monthlyPcQcCnt;
             $list[$index]['monthlyMobileQcCnt']     = $monthlyMobileQcCnt;
             $list[$index]['monthlyAvePcClkCnt']     = $monthlyAvePcClkCnt;
@@ -92,6 +102,113 @@ class SearchAD extends RestApi
         return $json;
     }
 
+    public function getKeywordsInfo(array $keywords=[], array $params=[]) : array
+    {
+        $arr = [];
+
+        $params = ( empty($params) ) ? $this->setting['keywordtool'] : $params;
+        foreach ($keywords as $index => $keyword) {
+            $params['hintKeywords'] = $keyword;
+            $result = $this->GET('/keywordstool', $params);
+            $keywordsToolData = json_decode($this->makeKeywordList($result), true);
+            $arr[] = $keywordsToolData;
+        }
+
+        return $arr;
+    }
+
+    public function seperateAd(array $keywordsToolData) : array
+    {
+        $arr = [
+            'normal' => [],
+            'ad' => [],
+        ];
+
+        foreach ($keywordsToolData as $index => $keywordsToolDatum) {
+            $item = $keywordsToolDatum['item'];
+            if(isset($item['adId'])){
+                $arr['ad'][] = $item;
+            } else {
+                $arr['normal'][] = $item;
+            }
+        }
+
+        return $arr;
+    }
+
+    public function mergeKeywordsInfo(array $keywordsInfo) : array
+    {
+        $arr = [];
+        $firstItemArr = [];
+        foreach ($keywordsInfo as $index => $item){
+            $firstItemArr[] = $item['keywordList'][0];
+        }
+
+        foreach ($firstItemArr as $index => $item) {
+            $keyword = $item['relKeyword'];
+            $crawlData = $this->crawlNaverShopping($keyword);
+            $crawlDataJson = html_entity_decode($crawlData[0]);
+            $crawlData = json_decode($crawlDataJson, true);
+            $productList = $crawlData['props']['pageProps']['initialState']['products']['list'];
+            $exceptedProductList = $this->seperateAd($productList);
+            $normalProductList = $exceptedProductList['normal'];
+            $rank1Product = $normalProductList[0];
+
+            $item['total'] = $crawlData['props']['pageProps']['initialState']['products']['total'];
+            $item['ratio'] = $item['total'] / $item['monthlyTotalQcCnt'];
+            $rank1Product['categoryStr'] = $this->makeProductCategory($rank1Product);
+            $mergedData = array_merge($item, $rank1Product);
+            $arr[] = $mergedData;
+        }
+        return $arr;
+    }
+
+    public function makeProductCategory(array $product) : string
+    {
+        $arr = [
+            $product['category1Name'],
+            $product['category2Name'],
+            $product['category3Name'],
+            $product['category4Name'],
+        ];
+
+        $str = '';
+
+        foreach ($arr as $index => $item) {
+            if(!$item){
+                continue;
+            }
+
+            if($index == 0){
+                $str .= $item;
+            } else {
+                $str .= ' > '.$item;
+            }
+        }
+
+        return $str;
+    }
+
+    public function textSeperator(string $text, string $seperator=',') : array
+    {
+        if(!$text){
+            return false;
+        }
+
+        $arr = [];
+        $keywords = explode($seperator, $text);
+        foreach ($keywords as $index => $keyword) {
+            $arr[] = $this->sterilizeText($keyword);
+        }
+
+        return $arr;
+    }
+
+    public function sterilizeText(string $text) : string
+    {
+        return trim(str_replace(' ', '', $text));
+    }
+
     public function onlyNum(string $str)
     {
         $num = str_replace('< ', '', $str);
@@ -103,5 +220,11 @@ class SearchAD extends RestApi
         echo '<pre>';
         var_dump($dump);
         echo '</pre>';
+    }
+
+    public function ddd($dump)
+    {
+        $this->dd($dump);
+        exit;
     }
 }
