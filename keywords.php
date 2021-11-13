@@ -94,7 +94,6 @@ if(isset($_GET['keywords'])){
                     <td>PC평균클릭률</td>
                     <td>MO평균클릭률</td>
                     <td>월평균노출광고</td>
-                    <td>경쟁도</td>
                     <td>경쟁강도</td>
                     <td>상품수</td>
                     <td>카테고리</td>
@@ -112,9 +111,8 @@ if(isset($_GET['keywords'])){
                     <td><?= number_format($item['monthlyAveMobileClkCnt'])?></td>
                     <td><?= number_format($item['monthlyAveTotalClkCnt'])?></td>
                     <td><?= number_format($item['monthlyAvePcCtr'])?></td>
-                    <td><?= number_format($item['ratio'], 1)?></td>
                     <td><?= $item['plAvgDepth']?></td>
-                    <td><?= $item['compIdx']?></td>
+                    <td><?= number_format($item['ratio'], 1)?> (<?= $item['compIdx']?>)</td>
                     <td><?= number_format($item['total'])?></td>
                     <td><?= $item['categoryStr']?></td>
                 </tr>

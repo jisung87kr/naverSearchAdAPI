@@ -155,7 +155,7 @@ class SearchAD extends RestApi
             $rank1Product = $normalProductList[0];
 
             $item['total'] = $crawlData['props']['pageProps']['initialState']['products']['total'];
-            $item['ratio'] = $item['total'] / $item['monthlyTotalQcCnt'];
+            $item['ratio'] = $item['monthlyTotalQcCnt'] / $item['total'];
             $rank1Product['categoryStr'] = $this->makeProductCategory($rank1Product);
             $mergedData = array_merge($item, $rank1Product);
             $arr[] = $mergedData;
