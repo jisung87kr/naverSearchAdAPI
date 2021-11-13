@@ -87,7 +87,8 @@ if(isset($_REQUEST['act'])){
 </style>
 <body>
 <div class="container-fluid">
-    <div class="border my-1 py-5">
+    <?php include './include/nav.php';?>
+    <div class="border my-1 p-5">
         <h1 class="text-center">네이버 검색광고 키워드 검색</h1>
         <form action="" class="my-3" id="search-form">
             <div class="row g-3 justify-content-center">

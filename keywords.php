@@ -69,14 +69,17 @@ if(isset($_GET['keywords'])){
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>네이버 검색광고 키워드 분석</h1>
-        <form action="" class="my-5">
-            <div class="input-group">
-                <input type="text" name="keywords" value="<?php echo ( isset($_GET['keywords']) ) ? htmlspecialchars($_GET['keywords']) : ''; ?>" class="form-control" placeholder="">
-                <input type="submit" class="btn btn-primary">
-            </div>
-        </form>
+    <div class="container-fluid">
+        <?php include './include/nav.php';?>
+        <div class="border my-1 p-5">
+            <h1 class="text-center">네이버 검색광고 키워드 분석</h1>
+            <form action="" class="my-5">
+                <div class="input-group">
+                    <input type="text" name="keywords" value="<?php echo ( isset($_GET['keywords']) ) ? htmlspecialchars($_GET['keywords']) : ''; ?>" class="form-control" placeholder="">
+                    <input type="submit" class="btn btn-primary">
+                </div>
+            </form>
+        </div>
         <div class="table-responsive">
             <table class="table table-bordered table-striped table-hover" style="font-size: 12px;" id="dataTable">
                 <thead>
